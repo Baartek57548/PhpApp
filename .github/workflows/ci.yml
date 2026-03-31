@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Prepare environment file
+        run: cp docker-php/.env.example docker-php/.env
+
+      - name: Build and start containers
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php up -d --build
+
+      - name: Install Composer dependencies
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php exec -T php_8_4 composer install --no-interaction
+
+      - name: Validate Composer configuration
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php exec -T php_8_4 composer validate --strict
+
+      - name: Run PHPStan
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php exec -T php_8_4 composer analyse
+
+      - name: Run PHP CS Fixer in check mode
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php exec -T php_8_4 composer cs:check
+
+      - name: Run PHPUnit
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php exec -T php_8_4 composer test
+
+      - name: Stop containers
+        if: always()
+        run: docker compose -f docker-php/docker-compose.yml --project-directory docker-php down

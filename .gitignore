@@ -1,0 +1,6 @@
+docker-php/projects/inf-backend/vendor/
+docker-php/projects/inf-backend/.phpunit.result.cache
+docker-php/projects/inf-backend/.phpunit.cache/
+docker-php/projects/inf-backend/.php-cs-fixer.cache
+docker-php/.env
+.run/
