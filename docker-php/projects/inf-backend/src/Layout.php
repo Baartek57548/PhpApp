@@ -1,59 +1,36 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App;
-
-use RuntimeException;
 
 class Layout
 {
-    private string $title = 'INF Backend App';
+    private string $page;
 
-    public function __construct(
-        private string $page,
-        private string $layoutName,
-        private string $basePath = __DIR__ . '/..',
-    ) {
+    private string $layoutName;
+
+    private string $title = "INF Backend App";
+
+    public function __construct(string $page, string $layoutName)
+    {
+        $this->page = $page;
+        $this->layoutName = $layoutName;
     }
 
-    public function render(): string
+    public function render(): void
     {
-        return $this->renderFile($this->getLayoutFilePath(), [
+        extract([
             'title' => $this->title,
-            'content' => $this->getPageContent(),
+            'content' => $this->getPageContent()
         ]);
+
+        include __DIR__ . "/../layout/$this->layoutName.php";
+
     }
 
     public function getPageContent(): string
     {
-        return $this->renderFile($this->getPageFilePath());
-    }
-
-    private function getLayoutFilePath(): string
-    {
-        return sprintf('%s/layout/%s.php', $this->basePath, $this->layoutName);
-    }
-
-    private function getPageFilePath(): string
-    {
-        return sprintf('%s/page/%s.php', $this->basePath, $this->page);
-    }
-
-    /**
-     * @param array<string, string> $variables
-     */
-    private function renderFile(string $filePath, array $variables = []): string
-    {
-        if (!is_file($filePath)) {
-            throw new RuntimeException(sprintf('Template file not found: %s', $filePath));
-        }
-
-        extract($variables, EXTR_SKIP);
-
         ob_start();
-        include $filePath;
-
-        return (string) ob_get_clean();
+        include __DIR__ . "/../page/$this->page.php";
+        return ob_get_clean();
     }
 }

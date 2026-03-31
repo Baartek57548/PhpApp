@@ -1,65 +1,41 @@
 <?php
 
-declare(strict_types=1);
-
 namespace App;
 
 class Application
 {
     /**
-     * @var list<string>
+     * @var array|string[]
      */
-    private array $allowedPages = [
-        'homepage',
-        'about',
-        'articles',
-        'dashboard',
-    ];
+    
 
     /**
-     * @param array<string, mixed>|null $queryParameters
-     * @param list<string>|null $allowedPages
+     * @var string
      */
-    public function __construct(
-        private ?array $queryParameters = null,
-        ?array $allowedPages = null,
-    ) {
-        if ($allowedPages !== null) {
-            $this->allowedPages = $allowedPages;
-        }
-    }
+    private string $page;
+
+    /**
+     * @var Layout
+     */
+    private Layout $layout;
 
     public function run(): void
     {
-        echo $this->render();
+        $request = Request::initializeRequest();
+        $router = new Router($this->getRoutes());
+        $this->page = $router->match($request);
+
+        $this->layout = new Layout($this->page, 'default');
+        $this->layout->render();
     }
 
-    public function render(): string
+    public function getRoutes(): array
     {
-        $page = $this->resolvePage($this->getRequestedPage());
-
-        return $this->createLayout($page)->render();
-    }
-
-    public function resolvePage(?string $page): string
-    {
-        if ($page === null || !in_array($page, $this->allowedPages, true)) {
-            return 'homepage';
-        }
-
-        return $page;
-    }
-
-    private function getRequestedPage(): ?string
-    {
-        $queryParameters = $this->queryParameters ?? $_GET;
-        $page = $queryParameters['page'] ?? null;
-
-        return is_string($page) ? $page : null;
-    }
-
-    private function createLayout(string $page): Layout
-    {
-        return new Layout($page, 'default');
+        return [
+            '/' => 'homepage',
+            '/about' => 'about',
+            '/articles' => 'articles',
+            '/dashboard' => 'dashboard'
+        ];
     }
 }
